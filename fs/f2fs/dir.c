@@ -88,6 +88,9 @@ static bool early_match_name(const char *name, size_t namelen,
 	return true;
 }
 
+/*
+*在block中查找dentry,根据pos的值
+*/
 static struct f2fs_dir_entry *find_in_block(struct page *dentry_page,
 			const char *name, size_t namelen, int *max_slots,
 			f2fs_hash_t namehash, struct page **res_page)
@@ -101,6 +104,7 @@ static struct f2fs_dir_entry *find_in_block(struct page *dentry_page,
 					NR_DENTRY_IN_BLOCK, 0);
 	while (bit_pos < NR_DENTRY_IN_BLOCK) {
 		de = &dentry_blk->dentry[bit_pos];
+		//dentry占了几个slot
 		slots = GET_DENTRY_SLOTS(le16_to_cpu(de->name_len));
 
 		if (early_match_name(name, namelen, namehash, de)) {
@@ -152,13 +156,16 @@ static struct f2fs_dir_entry *find_in_level(struct inode *dir,
 
 	for (; bidx < end_block; bidx++) {
 		/* no need to allocate new dentry pages to all the indices */
-		//nat树中没有就去块设备中取该目录的bidx位置之后的page
+		/*取桶中块对应的page
+		*如果在内存中就直接读，不在的话就去介质中取
+		*所以dentry保留在内存中的是按照一个bolck的大小来取
+		*/
 		dentry_page = find_data_page(dir, bidx, true);
 		if (IS_ERR(dentry_page)) {
 			room = true;
 			continue;
 		}
-
+		//在block中定位dentry
 		de = find_in_block(dentry_page, name, namelen,
 					&max_slots, namehash, res_page);
 		if (de)

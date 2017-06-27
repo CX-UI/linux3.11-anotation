@@ -196,6 +196,7 @@ struct page *find_data_page(struct inode *inode, pgoff_t index, bool sync)
 	f2fs_put_page(page, 0);
 
 	set_new_dnode(&dn, inode, NULL, NULL, 0);
+	//去介质上的数据块查找相应的page
 	err = get_dnode_of_data(&dn, index, LOOKUP_NODE);
 	if (err)
 		return ERR_PTR(err);
@@ -208,6 +209,7 @@ struct page *find_data_page(struct inode *inode, pgoff_t index, bool sync)
 	if (dn.data_blkaddr == NEW_ADDR)
 		return ERR_PTR(-EINVAL);
 
+	//准备一页，准备开始写入内存
 	page = grab_cache_page_write_begin(mapping, index, AOP_FLAG_NOFS);
 	if (!page)
 		return ERR_PTR(-ENOMEM);
@@ -216,7 +218,8 @@ struct page *find_data_page(struct inode *inode, pgoff_t index, bool sync)
 		unlock_page(page);
 		return page;
 	}
-
+	
+	//写到内存中
 	err = f2fs_readpage(sbi, page, dn.data_blkaddr,
 					sync ? READ_SYNC : READA);
 	if (sync) {
