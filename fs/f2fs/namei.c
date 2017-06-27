@@ -209,6 +209,7 @@ static struct dentry *f2fs_lookup(struct inode *dir, struct dentry *dentry,
 		return ERR_PTR(-ENAMETOOLONG);
 
 	de = f2fs_find_entry(dir, &dentry->d_name, &page);
+	//找到name所对应的dentry
 	if (de) {
 		nid_t ino = le32_to_cpu(de->ino);
 		kunmap(page);
@@ -218,7 +219,7 @@ static struct dentry *f2fs_lookup(struct inode *dir, struct dentry *dentry,
 		if (IS_ERR(inode))
 			return ERR_CAST(inode);
 	}
-
+	//将同一个inode与dentry绑定
 	return d_splice_alias(inode, dentry);
 }
 

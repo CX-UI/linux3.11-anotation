@@ -877,7 +877,7 @@ static int read_node_page(struct page *page, int type)
 {
 	struct f2fs_sb_info *sbi = F2FS_SB(page->mapping->host->i_sb);
 	struct node_info ni;
-
+	//得到page对应的节点信息
 	get_node_info(sbi, page->index, &ni);
 
 	if (ni.blk_addr == NULL_ADDR) {
@@ -887,7 +887,7 @@ static int read_node_page(struct page *page, int type)
 
 	if (PageUptodate(page))
 		return LOCKED_PAGE;
-
+	//通过块设备的io读一个页
 	return f2fs_readpage(sbi, page, ni.blk_addr, type);
 }
 

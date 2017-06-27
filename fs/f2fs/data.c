@@ -186,7 +186,10 @@ struct page *find_data_page(struct inode *inode, pgoff_t index, bool sync)
 	struct dnode_of_data dn;
 	struct page *page;
 	int err;
-
+	/*首先要根据index找slot
+	*然后根据slot的位置找出相应的物理页
+	×解引用
+	*/
 	page = find_get_page(mapping, index);
 	if (page && PageUptodate(page))
 		return page;

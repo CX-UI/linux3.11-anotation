@@ -131,6 +131,7 @@ static struct f2fs_dir_entry *find_in_level(struct inode *dir,
 		unsigned int level, const char *name, size_t namelen,
 			f2fs_hash_t namehash, struct page **res_page)
 {
+	//计算filename占几个slots
 	int s = GET_DENTRY_SLOTS(namelen);
 	unsigned int nbucket, nblock;
 	unsigned int bidx, end_block;
@@ -140,15 +141,18 @@ static struct f2fs_dir_entry *find_in_level(struct inode *dir,
 	int max_slots = 0;
 
 	BUG_ON(level > MAX_DIR_HASH_DEPTH);
-
+	//每个level中有多少个桶
 	nbucket = dir_buckets(level);
+	//一个桶中有2/4个block
 	nblock = bucket_blocks(level);
-
+	//通过hash取余计算索引的开始位置
 	bidx = dir_block_index(level, le32_to_cpu(namehash) % nbucket);
+	//遍历的个数2/4
 	end_block = bidx + nblock;
 
 	for (; bidx < end_block; bidx++) {
 		/* no need to allocate new dentry pages to all the indices */
+		//nat树中没有就去块设备中取该目录的bidx位置之后的page
 		dentry_page = find_data_page(dir, bidx, true);
 		if (IS_ERR(dentry_page)) {
 			room = true;
@@ -164,7 +168,7 @@ static struct f2fs_dir_entry *find_in_level(struct inode *dir,
 			room = true;
 		f2fs_put_page(dentry_page, 0);
 	}
-
+	//如果没有就记录下name的hash值
 	if (!de && room && F2FS_I(dir)->chash != namehash) {
 		F2FS_I(dir)->chash = namehash;
 		F2FS_I(dir)->clevel = level;
@@ -197,8 +201,9 @@ struct f2fs_dir_entry *f2fs_find_entry(struct inode *dir,
 		return NULL;
 
 	*res_page = NULL;
-
+	//计算name的hash值
 	name_hash = f2fs_dentry_hash(name, namelen);
+	//应该是每个目录都会有hash table，获取hash table的level数
 	max_depth = F2FS_I(dir)->i_current_depth;
 
 	for (level = 0; level < max_depth; level++) {
