@@ -3771,6 +3771,7 @@ out_stop:
 static int __ext4_get_inode_loc(struct inode *inode,
 				struct ext4_iloc *iloc, int in_mem)
 {
+	//块组描述符
 	struct ext4_group_desc	*gdp;
 	struct buffer_head	*bh;
 	struct super_block	*sb = inode->i_sb;
@@ -3792,14 +3793,18 @@ static int __ext4_get_inode_loc(struct inode *inode,
 	 * Figure out the offset within the block group inode table
 	 */
 	inodes_per_block = EXT4_SB(sb)->s_inodes_per_block;
+	//inode的偏移量
 	inode_offset = ((inode->i_ino - 1) %
 			EXT4_INODES_PER_GROUP(sb));
+	//找到block的区域/扇区和inode的在block中的location偏移量
 	block = ext4_inode_table(sb, gdp) + (inode_offset / inodes_per_block);
 	iloc->offset = (inode_offset % inodes_per_block) * EXT4_INODE_SIZE(sb);
-
+	
+	//取出这个block
 	bh = sb_getblk(sb, block);
 	if (unlikely(!bh))
 		return -ENOMEM;
+	//如果没有uptodate说明buffer里面的缓存不是新的，需要从块设备中读取
 	if (!buffer_uptodate(bh)) {
 		lock_buffer(bh);
 
@@ -3811,7 +3816,8 @@ static int __ext4_get_inode_loc(struct inode *inode,
 		 */
 		if (buffer_write_io_error(bh) && !buffer_uptodate(bh))
 			set_buffer_uptodate(bh);
-
+		
+		//已经更新了
 		if (buffer_uptodate(bh)) {
 			/* someone brought it uptodate while we waited */
 			unlock_buffer(bh);
@@ -3823,6 +3829,7 @@ static int __ext4_get_inode_loc(struct inode *inode,
 		 * is the only valid inode in the block, we need not read the
 		 * block.
 		 */
+		//如果inode的信息在内存中`
 		if (in_mem) {
 			struct buffer_head *bitmap_bh;
 			int i, start;
@@ -3830,6 +3837,7 @@ static int __ext4_get_inode_loc(struct inode *inode,
 			start = inode_offset & ~(inodes_per_block - 1);
 
 			/* Is the inode bitmap in cache? */
+			//在内存中取inode_block
 			bitmap_bh = sb_getblk(sb, ext4_inode_bitmap(sb, gdp));
 			if (unlikely(!bitmap_bh))
 				goto make_io;
@@ -3840,6 +3848,7 @@ static int __ext4_get_inode_loc(struct inode *inode,
 			 * of one, so skip it.
 			 */
 			if (!buffer_uptodate(bitmap_bh)) {
+				//减少一个引用
 				brelse(bitmap_bh);
 				goto make_io;
 			}

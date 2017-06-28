@@ -697,6 +697,7 @@ dx_probe(const struct qstr *d_name, struct inode *dir,
 	if (hinfo->hash_version <= DX_HASH_TEA)
 		hinfo->hash_version += EXT4_SB(dir->i_sb)->s_hash_unsigned;
 	hinfo->seed = EXT4_SB(dir->i_sb)->s_hash_seed;
+	//计算name的hash值
 	if (d_name)
 		ext4fs_dirhash(d_name->name, d_name->len, hinfo);
 	hash = hinfo->hash;
@@ -774,6 +775,7 @@ dx_probe(const struct qstr *d_name, struct inode *dir,
 		frame->entries = entries;
 		frame->at = at;
 		if (!indirect--) return frame;
+		//所找的entry所在的block地址
 		bh = ext4_read_dirblock(dir, dx_get_block(at), INDEX);
 		if (IS_ERR(bh)) {
 			*err = PTR_ERR(bh);
@@ -1258,6 +1260,7 @@ static struct buffer_head * ext4_find_entry (struct inode *dir,
 		goto restart;
 	}
 	if (is_dx(dir)) {
+		//找到
 		bh = ext4_dx_find_entry(dir, d_name, res_dir, &err);
 		/*
 		 * On success, or if the error was file not found,
@@ -1366,6 +1369,7 @@ static struct buffer_head * ext4_dx_find_entry(struct inode *dir, const struct q
 	ext4_lblk_t block;
 	int retval;
 
+	//用hash找name对应的entry所在的frame
 	if (!(frame = dx_probe(d_name, dir, &hinfo, frames, err)))
 		return NULL;
 	do {
@@ -1388,6 +1392,7 @@ static struct buffer_head * ext4_dx_find_entry(struct inode *dir, const struct q
 			goto errout;
 		}
 
+		//如果没有再去htree里面找
 		/* Check to see if we should continue to search */
 		retval = ext4_htree_next_block(dir, hinfo.hash, frame,
 					       frames, NULL);
@@ -1417,7 +1422,8 @@ static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsi
 
 	if (dentry->d_name.len > EXT4_NAME_LEN)
 		return ERR_PTR(-ENAMETOOLONG);
-
+	
+	//没法只读一个entry所以要按照bh读
 	bh = ext4_find_entry(dir, &dentry->d_name, &de, NULL);
 	inode = NULL;
 	if (bh) {

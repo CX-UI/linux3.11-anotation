@@ -281,8 +281,10 @@ struct ext4_group_desc * ext4_get_group_desc(struct super_block *sb,
 
 		return NULL;
 	}
-
+	
+	//组的大小
 	group_desc = block_group >> EXT4_DESC_PER_BLOCK_BITS(sb);
+	//定位block的位置
 	offset = block_group & (EXT4_DESC_PER_BLOCK(sb) - 1);
 	if (!sbi->s_group_desc[group_desc]) {
 		ext4_error(sb, "Group descriptor not loaded - "
@@ -294,6 +296,7 @@ struct ext4_group_desc * ext4_get_group_desc(struct super_block *sb,
 	desc = (struct ext4_group_desc *)(
 		(__u8 *)sbi->s_group_desc[group_desc]->b_data +
 		offset * EXT4_DESC_SIZE(sb));
+	//把bh定位到组块
 	if (bh)
 		*bh = sbi->s_group_desc[group_desc];
 	return desc;

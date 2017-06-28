@@ -1595,7 +1595,8 @@ struct buffer_head *ext4_find_inline_entry(struct inode *dir,
 	struct ext4_iloc iloc;
 	void *inline_start;
 	int inline_size;
-
+	
+	//得到inode的偏移位置以及block
 	if (ext4_get_inode_loc(dir, &iloc))
 		return NULL;
 
