@@ -3778,9 +3778,11 @@ static int __ext4_get_inode_loc(struct inode *inode,
 	int			inodes_per_block, inode_offset;
 
 	iloc->bh = NULL;
+	//检测是不是无效的
 	if (!ext4_valid_inum(sb, inode->i_ino))
 		return -EIO;
 
+	//计算group中inode数
 	iloc->block_group = (inode->i_ino - 1) / EXT4_INODES_PER_GROUP(sb);
 	gdp = ext4_get_group_desc(sb, iloc->block_group, NULL);
 	if (!gdp)
