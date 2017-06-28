@@ -1239,6 +1239,7 @@ static struct buffer_head * ext4_find_entry (struct inode *dir,
 		int has_inline_data = 1;
 		ret = ext4_find_inline_entry(dir, d_name, res_dir,
 					     &has_inline_data);
+		//这用法好
 		if (has_inline_data) {
 			if (inlined)
 				*inlined = 1;
@@ -1409,8 +1410,10 @@ errout:
 static struct dentry *ext4_lookup(struct inode *dir, struct dentry *dentry, unsigned int flags)
 {
 	struct inode *inode;
+	/*ext4 不需要hash啊
+	*记录了entry的大小*/
 	struct ext4_dir_entry_2 *de;
-	struct buffer_head *bh;
+	struct buffer_head *bh;//bio的功能，map一个block到页
 
 	if (dentry->d_name.len > EXT4_NAME_LEN)
 		return ERR_PTR(-ENAMETOOLONG);
